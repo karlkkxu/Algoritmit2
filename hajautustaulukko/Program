@@ -1,0 +1,131 @@
+using System;
+
+namespace Alg2
+{
+    class Program
+    {
+        //Kuinka monta lukua tallennetaan
+        public const int TALLENNETTAVATLKM = 7;
+
+        //Minimi- ja maksimiarvot joita voidaan generoida tallennettaviksi luvuiksi
+        public const int MIN = 1;
+        public const int MAX = 99;
+
+        //Kuinka monta tallennuspaikkaa on taulukossa
+        //Täytyy olla enemmän kuin TALLENNETTAVATLKM
+        public const int TAULUKONKOKO = 11;
+
+        //Arvot, jotka luetaan taulukossa arvoiksi "TYHJÄ" ja "POISTETTU"
+        //Pitää olla arvot min-max välin ulkopuolelta
+        public const int TYHJA = 0;
+        public const int POISTETTU = -1;
+
+        static void Main(string[] args)
+        {
+            Console.WriteLine("Kuinka lukea tulostusta:");
+            Console.WriteLine("Koodi generoi ensin taulukon satunnaisia kokonaislukuja, jotka tullaan lisäämään kokonaislukutaulukkoon hajauttamalla");
+            Console.WriteLine("Ensimmäinen tuloste on tämä taulukko satunnaisia lukuja");
+            Console.WriteLine();
+            Console.WriteLine("Sen jälkeen lisätään kaikki luvut taulukkoon, ja tulostetaan taulukon tila lisäyksineen");
+            Console.WriteLine();
+            Console.WriteLine("Ja vihdoin kaksi ensimmäistä lukua satunnaisesta taulukosta poistetaan hajautustaulukosta, ja tulostetaan taulukon tila poistojen jälkeen");
+            Console.WriteLine();
+
+
+
+            //Muodostaa taulukon tallennettavista luvuista ja tulostaa ne konsoliin näkyvyyden takia
+            int[] talletettavat = luoRandomTaulukko(TALLENNETTAVATLKM, MIN, MAX);
+            Console.WriteLine("Talletettavat luvut:");
+            foreach (int t in talletettavat) Console.WriteLine(t);
+
+            //Muodostaa taulukon jonne edellä määritellyt luvut tallennetaan
+            //Asetetaan jokaisen alkion arvoksi "TYHJÄ" (ei ole tarpeellinen jos TYHJÄ = 0)
+            int[] taulukko = new int[TAULUKONKOKO];
+            if (TYHJA != 0)
+                for (int i = 0; i < taulukko.Length; i++)
+                    taulukko[i] = TYHJA;
+
+            //Lisää taulukosta talletettavat loopilla kaikki arvot tallennettavaan taulukkoon
+            for (int i = 0; i < talletettavat.Length; i++)
+                hajautusLisaa(taulukko, talletettavat[i]);
+            Console.WriteLine("Taulukon luvut LISÄYKSEN jälkeen:");
+            foreach (int t in taulukko) Console.WriteLine(t);
+
+            //Poistetaan "talletettavat" taulukon kaksi ensimmäistä lukua taulukosta
+            hajautusPoista(taulukko, talletettavat[0]);
+            hajautusPoista(taulukko, talletettavat[1]);
+            Console.WriteLine("Taulukon luvut POISTON jälkeen:");
+            foreach (int t in taulukko) Console.WriteLine(t);
+        }
+
+        /// <summary>
+        /// Poistaa halutun luvun hajautustaulukosta. Lineaarinen etsintä (h(k) + i) mod m
+        /// </summary>
+        /// <param name="taulukko">Mistä poistetaan</param>
+        /// <param name="luku">Arvo, joka poistetaan</param>
+        private static void hajautusPoista(int[] taulukko, int luku)
+        {
+            int i = 0;
+            int m = taulukko.Length;
+            int h = luku;
+            while (true)
+            {
+                int paikka = (h + i) % m;
+                if (taulukko[paikka] == luku)
+                {
+                    taulukko[paikka] = POISTETTU;
+                    return;
+                }
+                else if (taulukko[paikka] == TYHJA)
+                {
+                    Console.WriteLine("Arvoa ei löydy taulukosta");
+                    return;
+                }
+                else
+                    i++;
+
+            }
+        }
+
+        /// <summary>
+        /// Lisää hajautusalgoritmilla annetun arvon annettuun taulukkoon. Yksinkertainen algoritmi, (h(k) + i) mod m
+        /// </summary>
+        /// <param name="taulukko">Minne tallennetaan</param>
+        /// <param name="luku">Tallennettava arvo</param>
+        private static void hajautusLisaa(int[] taulukko, int luku)
+        {
+            int i = 0;
+            int m = taulukko.Length;
+            int h = luku;
+            while (true)
+            {
+                int paikka = (h+i) % m;
+                if (taulukko[paikka] == TYHJA | taulukko[paikka] == POISTETTU)
+                {
+                    taulukko[paikka] = luku;
+                    return;
+                }
+                else
+                    i++;
+            }
+        }
+
+        /// <summary>
+        /// Luo uuden taulukon joka täytetään satunnaisilla kokonaisluvuilla
+        /// </summary>
+        /// <param name="l">Taulukon koko</param>
+        /// <param name="min">Minimiarvo</param>
+        /// <param name="max">Maksimiarvo</param>
+        /// <returns>Valmis taulukko täynnä satunnaisia arvoja</returns>
+        private static int[] luoRandomTaulukko(int l, int min, int max)
+        {  
+            int[] talletettavat = new int[l];
+            Random rand = new Random();
+            for (int i = 0; i < talletettavat.Length; i++)
+            {
+                talletettavat[i] = rand.Next(min, max);
+            }
+            return talletettavat;
+        }
+    }
+}
