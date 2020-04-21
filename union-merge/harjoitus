@@ -1,0 +1,190 @@
+using System;
+
+namespace Alg2
+{
+    //Ohjelma muodostaa määritelmän tallennettaville perusjoukon jäsenille (Merkkijono) joka sisältää haettavan tiedon (jono) ja viittauksen joukossa seuraajaansa
+    //Sitten määritellään Lista-olio johon voidaan tallentaa Merkkijonoja helpottamaan union-find operaatioita
+    class Program
+    {
+        /// <summary>
+        /// Määritelmä perusjoukon jäsenille, sisältää tallennetavan tiedon (tässä tapauksessa Stringin) ja viittauksen seuraajaansa listassa (oletusarvoisesti tyhjä)
+        /// </summary>
+        class Merkkijono
+        {
+            public String jono;
+            private Merkkijono seuraava = null;
+
+            public Merkkijono(String jono)
+            {
+                this.jono = jono;
+            }
+
+            public void setSeuraava(Merkkijono seuraava)
+            {
+                this.seuraava = seuraava;
+            }
+
+            public Merkkijono getSeuraava()
+            {
+                return this.seuraava;
+            }
+
+            public override string ToString()
+            {
+                return this.jono.ToString();
+            }
+        }
+
+        /// <summary>
+        /// Pitää sisällään linkitetyn listan Merkkijonoista. Jokainen lista on tunnistettavissa omaksi oliokseen uniikista ID numerosta.
+        /// Lista tietää viitteen ensimmäiseen ja viimeiseen jäseneensä, joka mahdollistaa O(n) etsimisen, ja O(1) lisäämisen
+        /// </summary>
+        class Lista
+        {
+            private static int ID_SOURCE = 0;
+
+            private int ID;
+            private Merkkijono ensimmainen;
+            private Merkkijono viimeinen;
+
+            public Lista(String jono)
+            {
+                this.ID = ID_SOURCE;
+                ID_SOURCE++;
+                Merkkijono eka = new Merkkijono(jono);
+                this.ensimmainen = eka;
+                this.viimeinen = eka;
+            }
+            public Lista(Merkkijono eka)
+            {
+                this.ID = ID_SOURCE;
+                ID_SOURCE++;
+                this.ensimmainen = eka;
+                this.viimeinen = eka;
+            }
+
+            public void lisaa(Merkkijono lisa)
+            {
+                this.viimeinen.setSeuraava(lisa);
+                this.viimeinen = lisa;
+            }
+
+            public void lisaa(Lista lisa)
+            {
+                while (lisa.ensimmainen != lisa.viimeinen)
+                {
+                    this.viimeinen.setSeuraava(lisa.getEnsimmainen());
+                    this.viimeinen = lisa.getEnsimmainen();
+                    lisa.ensimmainen = lisa.ensimmainen.getSeuraava();
+                }
+                this.viimeinen.setSeuraava(lisa.getEnsimmainen());
+                this.viimeinen = lisa.getEnsimmainen();
+                lisa.ensimmainen = null;
+                lisa.viimeinen = null;
+            }
+
+            /// <summary>
+            /// Etsii lineaarisesti Listan etsittävän merkkijonon perusteella ja palauttaa Merkkijonon jonka löytää
+            /// </summary>
+            /// <param name="etsittava">Etsittävä merkkijono</param>
+            /// <returns>null jos Listassa ei ole Merkkijonoa. Merkkijono jonka vastiketta etsitään, jos löytyy</returns>
+            public Merkkijono find(Merkkijono etsittava)
+            {
+                Merkkijono iter = this.ensimmainen;
+                if (iter == null)
+                    return null;
+                while (iter != null)
+                {
+                    if (etsittava.jono == iter.jono)
+                        return iter;
+                    iter = iter.getSeuraava();
+                }
+                return null;
+            }
+
+            /// <summary>
+            /// Etsii lineaarisesti Listan etsittävän stringin perusteella ja palauttaa Merkkijonon jonka löytää
+            /// </summary>
+            /// <param name="etsittava">Etsittävä merkkijono</param>
+            /// <returns>null jos Listassa ei ole Merkkijonoa. Merkkijono jonka vastiketta etsitään, jos löytyy</returns>
+            public Merkkijono find(String jono)
+            {
+                Merkkijono etsittava = new Merkkijono(jono);
+                return this.find(etsittava);
+            }
+
+            public void printJasenet()
+            {
+                Merkkijono tulostettava = this.ensimmainen;
+                if (tulostettava == null)
+                {
+                    Console.Write("Olen Joukko nro " + this.ID + ". Olen tyhjä joukko.");
+                    Console.WriteLine();
+                    return;
+                }
+
+                Console.Write("Olen Joukko nro " + this.ID + ". Jäseneni ovat: ");
+                while (tulostettava != null)
+                {
+                    Console.Write(tulostettava.ToString() + " ");
+                    tulostettava = tulostettava.getSeuraava();
+                }
+                Console.WriteLine();
+            }
+
+            public Merkkijono getEnsimmainen()
+            {
+                return this.ensimmainen;
+            }
+
+            public int getID()
+            {
+                return this.ID;
+            }
+        }
+        static void Main(string[] args)
+        {
+            //Luodaan taulukot jonne tallennetaan perusjoukon jäsenet, ja jokaisesta perusjoukon jäsenestä muodostetut joukot.
+            //Taulukoilla ei ole suoraa käyttötarkoitusta ohjelman toiminnan kannalta,
+            //mutta se helpottaa toimintojen havainnollistamista ja avustavien rakenteiden muodostamista
+            String[] perusjoukko = new String[] { "kiuru", "lokki", "rastas", "sorsa", "varis" };
+            Lista[] joukot = new Lista[perusjoukko.Length];
+            for (int i = 0; i < perusjoukko.Length; i++)
+                joukot[i] = new Lista(perusjoukko[i]);
+
+            Console.WriteLine("Alkutilanne on siis:");
+            Console.WriteLine("Kaikki joukot jäsenineen:");
+            for (int i = 0; i < joukot.Length; i++)
+                joukot[i].printJasenet();
+            Console.WriteLine();
+
+            Console.WriteLine("Alkutilanteen jälkeen lisätään joukkoja toisiinsa.");
+            joukot[0].lisaa(joukot[joukot.Length - 1]);
+            joukot[0].lisaa(joukot[joukot.Length - 2]);
+            for (int i = 0; i < joukot.Length; i++)
+                joukot[i].printJasenet();
+            Console.WriteLine();
+
+            joukot[1].lisaa(joukot[2]);
+            for (int i = 0; i < joukot.Length; i++)
+                joukot[i].printJasenet();
+            Console.WriteLine();
+
+            joukot[1].lisaa(joukot[0]);
+            for (int i = 0; i < joukot.Length; i++)
+                joukot[i].printJasenet();
+            Console.WriteLine();
+
+            String etsittava = "sorsa";
+            Console.WriteLine("Yritetään etsiä kaikki joukot sanalla '" + etsittava + "'");
+            for (int i = 0; i < joukot.Length; i++)
+            {
+                if (joukot[i].find(etsittava) != null)
+                    Console.WriteLine("Olen joukko " + joukot[i].getID() + ". ja löysin alkion " + etsittava);
+                else
+                    Console.WriteLine("Olen joukko " + joukot[i].getID() + ". ja en sisällä alkiota " + etsittava);
+            }
+            Console.WriteLine();
+        }
+    }
+}
